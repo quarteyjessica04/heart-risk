@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>CardioRisk – Heart Disease Risk Predictor</title>
+  <meta name="description" content="Estimate heart disease risk from patient health indicators. Installable and works offline." />
+  <meta name="theme-color" content="#be183c" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="CardioRisk" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="/icons/icon-192.png" alt="" width="34" height="34" />
+      <div><strong>CardioRisk</strong><span>Heart disease risk predictor</span></div>
+    </div>
+    <div class="actions">
+      <span id="net" class="pill ok" title="Connection status">Online</span>
+      <button id="install" class="btn ghost" hidden>Install app</button>
+      <button id="theme" class="icon-btn" aria-label="Toggle theme">◐</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="predict" role="tab">Predict</button>
+    <button class="tab" data-tab="performance" role="tab">Model performance</button>
+    <button class="tab" data-tab="about" role="tab">About</button>
+  </nav>
+
+  <main>
+    <!-- PREDICT -->
+    <section id="predict" class="panel active">
+      <div class="grid">
+        <form id="form" class="card" autocomplete="off">
+          <h2>Patient details</h2>
+          <div class="fields">
+            <label>Age <output data-for="age"></output>
+              <input type="range" name="age" min="18" max="100" value="55" />
+            </label>
+            <label>Sex
+              <div class="seg" data-name="sex">
+                <button type="button" data-v="0" class="on">Female</button>
+                <button type="button" data-v="1">Male</button>
+              </div>
+            </label>
+            <label>Systolic blood pressure (mmHg) <output data-for="blood_pressure"></output>
+              <input type="range" name="blood_pressure" min="80" max="220" value="130" />
+            </label>
+            <label>Cholesterol (mg/dL) <output data-for="cholesterol"></output>
+              <input type="range" name="cholesterol" min="120" max="350" value="220" />
+            </label>
+            <label>BMI <output data-for="bmi"></output>
+              <input type="range" name="bmi" min="15" max="50" step="0.1" value="28" />
+            </label>
+            <label>Physical activity (0–4) <output data-for="physical_activity"></output>
+              <input type="range" name="physical_activity" min="0" max="4" value="2" />
+            </label>
+            <label>Stress level (1–9) <output data-for="stress_level"></output>
+              <input type="range" name="stress_level" min="1" max="9" value="5" />
+            </label>
+            <label>Smoker
+              <div class="seg" data-name="smoker">
+                <button type="button" data-v="0" class="on">No</button>
+                <button type="button" data-v="1">Yes</button>
+              </div>
+            </label>
+            <label>Diabetes
+              <div class="seg" data-name="diabetes">
+                <button type="button" data-v="0" class="on">No</button>
+                <button type="button" data-v="1">Yes</button>
+              </div>
+            </label>
+            <label>Family history of heart disease
+              <div class="seg" data-name="family_history">
+                <button type="button" data-v="0" class="on">No</button>
+                <button type="button" data-v="1">Yes</button>
+              </div>
+            </label>
+          </div>
+          <div class="row">
+            <button type="submit" class="btn primary">Calculate risk</button>
+            <button type="button" id="reset" class="btn ghost">Reset</button>
+          </div>
+        </form>
+
+        <div class="card result" id="result" aria-live="polite">
+          <h2>Result</h2>
+          <div class="gauge-wrap">
+            <svg viewBox="0 0 200 120" class="gauge" aria-hidden="true">
+              <path d="M20 100 A80 80 0 0 1 180 100" class="track" />
+              <path id="arc" d="M20 100 A80 80 0 0 1 180 100" class="fill" pathLength="100" stroke-dasharray="0 100" />
+            </svg>
+            <div class="gauge-label"><span id="pct">—</span><small id="band">Press “Calculate risk”</small></div>
+          </div>
+          <p id="summary" class="muted">Enter the patient’s details and calculate to see the estimated probability.</p>
+          <h3>Main contributing factors</h3>
+          <ul id="factors" class="factors"></ul>
+          <p class="warn" id="reliability" hidden></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PERFORMANCE -->
+    <section id="performance" class="panel">
+      <div class="card">
+        <h2>Model evaluation</h2>
+        <div id="verdict" class="banner"></div>
+        <div class="stats" id="stats"></div>
+        <h3>All models (5-fold × 3 repeated cross-validation + 20% hold-out)</h3>
+        <div class="table-wrap"><table id="table"></table></div>
+        <h3>Confusion matrix – deployed model (hold-out set)</h3>
+        <div id="cm" class="cm"></div>
+        <p class="muted small" id="trainmeta"></p>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="panel">
+      <div class="card prose">
+        <h2>About this app</h2>
+        <p>CardioRisk estimates the probability of heart disease from ten health indicators using a logistic-regression model trained on the supplied hospital dataset. Predictions run <strong>entirely on your device</strong> – no patient data is sent anywhere, and the app works offline once installed.</p>
+        <h3>Important</h3>
+        <p>This is an educational/demo tool and <strong>not a medical device</strong>. It must not be used to diagnose, treat or make clinical decisions. Always consult a qualified clinician.</p>
+        <h3>Retraining</h3>
+        <p>Run <code>python ml/train.py your_data.csv</code> to retrain. The performance tab and predictions update automatically after redeploying.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>© CardioRisk · For educational use only · Not medical advice</footer>
+  <script src="/app.js"></script>
+</body>
+</html>
